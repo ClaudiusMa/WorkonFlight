@@ -18,6 +18,8 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
   const [atcPlaying, setAtcPlaying] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [atcHasError, setAtcHasError] = useState(false);
+  const [musicHasError, setMusicHasError] = useState(false);
   const atcAudioRef = useRef<HTMLAudioElement>(null);
   const musicAudioRef = useRef<HTMLAudioElement>(null);
 
@@ -32,20 +34,32 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
 
     if (isPlaying) {
       // Pause both
-      atcAudio.pause();
-      musicAudio.pause();
+      if (!atcHasError) atcAudio.pause();
+      if (!musicHasError) musicAudio.pause();
+      onPlayPause(false); // Update parent state
     } else {
-      // Play both
-      Promise.all([atcAudio.play(), musicAudio.play()])
-        .then(() => {
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          console.error('Error playing audio:', error);
-          onError('Failed to play audio. Please check your browser settings.');
-          setIsLoading(false);
-        });
+      // Play both (only the ones that are available)
       setIsLoading(true);
+      const playPromises = [];
+      
+      if (!atcHasError && airport) {
+        playPromises.push(atcAudio.play().catch((err) => {
+          console.error('Error playing ATC:', err);
+          setAtcHasError(true);
+        }));
+      }
+      
+      if (!musicHasError) {
+        playPromises.push(musicAudio.play().catch((err) => {
+          console.error('Error playing music:', err);
+          setMusicHasError(true);
+        }));
+      }
+
+      Promise.allSettled(playPromises).then(() => {
+        setIsLoading(false);
+        onPlayPause(true); // Update parent state
+      });
     }
   };
 
@@ -56,6 +70,25 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
   const handleMusicPlayPause = (playing: boolean) => {
     setMusicPlaying(playing);
   };
+
+  const handleAtcError = (error: string) => {
+    setAtcHasError(true);
+    onError(error);
+  };
+
+  const handleMusicError = (error: string) => {
+    setMusicHasError(true);
+    onError(error);
+  };
+
+  // Check if both audio sources are available
+  const bothAvailable = airport && !atcHasError && !musicHasError;
+
+  // Reset error states when airport changes
+  useEffect(() => {
+    setAtcHasError(false);
+    setMusicHasError(false);
+  }, [airport]);
 
   // Sync internal state with external isPlaying prop
   useEffect(() => {
@@ -84,7 +117,7 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
       <div className="flex justify-center">
         <Button
           onClick={handleMasterPlayPause}
-          disabled={isLoading || !airport}
+          disabled={isLoading || !bothAvailable}
           size="lg"
           className="w-32"
         >
@@ -99,6 +132,11 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
             {isLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Play'}
           </span>
         </Button>
+        {!bothAvailable && (
+          <p className="ml-4 text-sm text-muted-foreground self-center">
+            {!airport ? 'Select an airport' : 'One audio source unavailable'}
+          </p>
+        )}
       </div>
 
       {/* Both Players */}
@@ -107,14 +145,14 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
           airport={airport}
           isPlaying={atcPlaying}
           onPlayPause={handleAtcPlayPause}
-          onError={onError}
+          onError={handleAtcError}
           audioRef={atcAudioRef}
         />
         <Separator className="my-4" />
         <MusicPlayer
           isPlaying={musicPlaying}
           onPlayPause={handleMusicPlayPause}
-          onError={onError}
+          onError={handleMusicError}
           audioRef={musicAudioRef}
         />
       </div>
