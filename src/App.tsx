@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Radio, Headphones } from 'lucide-react'
+import { Radio, Music } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AirportSelector } from './components/AirportSelector'
-import { AudioPlayer } from './components/AudioPlayer'
+import { MixedAudioPlayer } from './components/MixedAudioPlayer'
 import { AirportInfo } from './components/AirportInfo'
 import { airports } from './data/airports'
 import { Airport } from './types/airport'
@@ -16,16 +16,7 @@ function App() {
   const handleAirportSelect = (airport: Airport) => {
     setSelectedAirport(airport)
     setError(null)
-    // Auto-play when airport is selected
-    setTimeout(() => {
-      const audio = document.querySelector('audio')
-      if (audio) {
-        audio.play().catch((err) => {
-          console.error('Auto-play failed:', err)
-          setError('Auto-play is disabled. Please click play manually.')
-        })
-      }
-    }, 500)
+    // Note: Auto-play disabled - user must click play button for both ATC and music
   }
 
   const handlePlayPause = (playing: boolean) => {
@@ -50,11 +41,10 @@ function App() {
           <div className="mb-4 flex items-center justify-center gap-3">
             <Radio className="h-8 w-8 text-primary" />
             <h1 className="text-5xl font-bold text-foreground">Live ATC Audio</h1>
-            <Headphones className="h-8 w-8 text-primary" />
+            <Music className="h-8 w-8 text-primary" />
           </div>
           <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
-            Listen to live air traffic control communications from the world&apos;s busiest
-            airports
+            Listen to live air traffic control communications mixed with atmospheric post-rock music
           </p>
         </motion.div>
 
@@ -81,8 +71,8 @@ function App() {
             onAirportSelect={handleAirportSelect}
           />
 
-          {/* Audio Player */}
-          <AudioPlayer
+          {/* Mixed Audio Player */}
+          <MixedAudioPlayer
             airport={selectedAirport}
             isPlaying={isPlaying}
             onPlayPause={handlePlayPause}
