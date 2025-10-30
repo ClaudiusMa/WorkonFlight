@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { Plane, MapPin, Clock, Ticket } from 'lucide-react';
+import { Plane, MapPin, Clock, Ticket, Play, Pause, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { Airport } from '@/types/airport';
 import { formatDuration } from '@/lib/flightCalculator';
 import { FocusTimeProgress } from './FocusTimeProgress';
@@ -13,6 +14,10 @@ interface FlightTicketProps {
   userCityName: string | null;
   flightDurationSeconds: number | null;
   focusTimeSeconds: number;
+  isPlaying: boolean;
+  isLoading: boolean;
+  bothAvailable: boolean;
+  onPlayPause: () => void;
 }
 
 export function FlightTicket({
@@ -21,6 +26,10 @@ export function FlightTicket({
   userCityName,
   flightDurationSeconds,
   focusTimeSeconds,
+  isPlaying,
+  isLoading,
+  bothAvailable,
+  onPlayPause,
 }: FlightTicketProps) {
   // Don't render if no airport selected or no location
   if (!airport || !userLocation || !flightDurationSeconds) {
@@ -35,7 +44,7 @@ export function FlightTicket({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="w-full max-w-2xl mx-auto"
+      className="w-full max-w-4xl mx-auto"
     >
       <Card className="border-2">
         <CardHeader>
@@ -107,6 +116,34 @@ export function FlightTicket({
               totalSeconds={flightDurationSeconds}
             />
           </div>
+
+          <Separator />
+
+          {/* Start/Pause Button */}
+          <div className="flex justify-center pt-2">
+            <Button
+              onClick={onPlayPause}
+              disabled={isLoading || !bothAvailable}
+              size="lg"
+              className="w-32"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-5 h-5" />
+              ) : (
+                <Play className="w-5 h-5" />
+              )}
+              <span className="ml-2">
+                {isLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Start'}
+              </span>
+            </Button>
+          </div>
+          {!bothAvailable && (
+            <p className="text-center text-sm text-muted-foreground pt-2">
+              {!airport ? 'Select an airport' : 'One audio source unavailable'}
+            </p>
+          )}
         </CardContent>
       </Card>
     </motion.div>

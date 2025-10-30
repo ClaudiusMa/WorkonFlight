@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Radio, Music } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -20,9 +20,12 @@ function App() {
   >(null)
   const [focusTimeSeconds, setFocusTimeSeconds] = useState(0)
   const [userCityName, setUserCityName] = useState<string | null>(null)
+  const [bothAvailable, setBothAvailable] = useState(false)
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false)
 
   const geolocation = useGeolocation()
   const focusTimeIntervalRef = useRef<number | null>(null)
+  const playPauseHandlerRef = useRef<(() => void) | null>(null)
 
   // Fetch city name when location is available
   useEffect(() => {
@@ -113,6 +116,10 @@ function App() {
     setIsPlaying(false)
   }
 
+  const handlePlayPauseClick = () => {
+    playPauseHandlerRef.current?.()
+  }
+
   const userLocation =
     geolocation.latitude !== null && geolocation.longitude !== null
       ? { latitude: geolocation.latitude, longitude: geolocation.longitude }
@@ -169,6 +176,10 @@ function App() {
             userCityName={userCityName}
             flightDurationSeconds={flightDurationSeconds}
             focusTimeSeconds={focusTimeSeconds}
+            isPlaying={isPlaying}
+            isLoading={isLoadingAudio}
+            bothAvailable={bothAvailable}
+            onPlayPause={handlePlayPauseClick}
           />
 
           {/* Mixed Audio Player */}
@@ -177,6 +188,11 @@ function App() {
             isPlaying={isPlaying}
             onPlayPause={handlePlayPause}
             onError={handleError}
+            onBothAvailableChange={setBothAvailable}
+            onLoadingChange={setIsLoadingAudio}
+            onPlayPauseHandlerReady={(handler) => {
+              playPauseHandlerRef.current = handler
+            }}
           />
         </div>
 

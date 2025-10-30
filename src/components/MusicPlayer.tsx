@@ -1,119 +1,133 @@
-import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Music, Volume2, VolumeX, ChevronLeft, ChevronRight, Music2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { musicFiles } from '@/data/musicFiles';
+import { useState, useRef, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import {
+  Music,
+  Volume2,
+  VolumeX,
+  ChevronLeft,
+  ChevronRight,
+  Music2,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { musicFiles } from '@/data/musicFiles'
 
 interface MusicPlayerProps {
-  isPlaying: boolean;
-  onPlayPause: (playing: boolean) => void;
-  onError?: (error: string) => void;
-  audioRef?: React.RefObject<HTMLAudioElement>;
+  isPlaying: boolean
+  onPlayPause: (playing: boolean) => void
+  onError?: (error: string) => void
+  audioRef?: React.RefObject<HTMLAudioElement>
 }
 
-export function MusicPlayer({ isPlaying, onPlayPause, onError, audioRef: externalRef }: MusicPlayerProps) {
-  const internalRef = useRef<HTMLAudioElement>(null);
-  const audioRef = externalRef || internalRef;
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [volume, setVolume] = useState(0.4);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+export function MusicPlayer({
+  isPlaying,
+  onPlayPause,
+  onError,
+  audioRef: externalRef,
+}: MusicPlayerProps) {
+  const internalRef = useRef<HTMLAudioElement>(null)
+  const audioRef = externalRef || internalRef
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [volume, setVolume] = useState(0.4)
+  const [isMuted, setIsMuted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
-  const currentTrack = musicFiles[currentIndex];
-  const musicUrl = currentTrack ? `/music/${currentTrack.fileName}` : '';
+  const currentTrack = musicFiles[currentIndex]
+  const musicUrl = currentTrack ? `/music/${currentTrack.fileName}` : ''
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const audio = audioRef.current
+    if (!audio) return
 
     const handleLoadStart = () => {
-      setIsLoading(true);
-      setHasError(false);
-    };
+      setIsLoading(true)
+      setHasError(false)
+    }
 
     const handleCanPlay = () => {
-      setIsLoading(false);
-      setHasError(false);
-    };
+      setIsLoading(false)
+      setHasError(false)
+    }
 
     const handleError = (e: Event) => {
-      setIsLoading(false);
-      setHasError(true);
-      const errorMsg = 'Music file failed to load';
-      onError?.(errorMsg);
-      console.error('Music error:', e);
-    };
+      setIsLoading(false)
+      setHasError(true)
+      const errorMsg = 'Music file failed to load'
+      onError?.(errorMsg)
+      console.error('Music error:', e)
+    }
 
-    const handlePlay = () => onPlayPause(true);
-    const handlePause = () => onPlayPause(false);
+    const handlePlay = () => onPlayPause(true)
+    const handlePause = () => onPlayPause(false)
 
-    audio.addEventListener('loadstart', handleLoadStart);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('loadstart', handleLoadStart)
+    audio.addEventListener('canplay', handleCanPlay)
+    audio.addEventListener('error', handleError)
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
 
     return () => {
-      audio.removeEventListener('loadstart', handleLoadStart);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-    };
-  }, [onError, onPlayPause]);
+      audio.removeEventListener('loadstart', handleLoadStart)
+      audio.removeEventListener('canplay', handleCanPlay)
+      audio.removeEventListener('error', handleError)
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+    }
+  }, [onError, onPlayPause])
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.volume = isMuted ? 0 : volume;
-  }, [volume, isMuted]);
+    const audio = audioRef.current
+    if (!audio) return
+    audio.volume = isMuted ? 0 : volume
+  }, [volume, isMuted])
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !musicUrl) return;
+    const audio = audioRef.current
+    if (!audio || !musicUrl) return
 
-    audio.load();
+    audio.load()
     if (isPlaying) {
       audio.play().catch((error) => {
-        console.error('Error playing music:', error);
-        setHasError(true);
-      });
+        console.error('Error playing music:', error)
+        setHasError(true)
+      })
     }
-  }, [currentIndex, isPlaying, musicUrl]);
+  }, [currentIndex, isPlaying, musicUrl])
 
   const handleNext = () => {
-    if (musicFiles.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % musicFiles.length);
-  };
+    if (musicFiles.length === 0) return
+    setCurrentIndex((prev) => (prev + 1) % musicFiles.length)
+  }
 
   const handlePrevious = () => {
-    if (musicFiles.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + musicFiles.length) % musicFiles.length);
-  };
+    if (musicFiles.length === 0) return
+    setCurrentIndex(
+      (prev) => (prev - 1 + musicFiles.length) % musicFiles.length
+    )
+  }
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    setIsMuted(newVolume === 0);
-  };
+    const newVolume = parseFloat(e.target.value)
+    setVolume(newVolume)
+    setIsMuted(newVolume === 0)
+  }
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
+    setIsMuted(!isMuted)
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Music className="w-5 h-5" />
+          <Music className="h-5 w-5" />
           Post-Rock Music
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Audio Element */}
         {musicUrl && (
           <audio
@@ -143,63 +157,52 @@ export function MusicPlayer({ isPlaying, onPlayPause, onError, audioRef: externa
 
         {/* Music Info & Controls */}
         {currentTrack ? (
-          <motion.div 
+          <motion.div
             key={`music-${currentTrack.id}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="flex items-center gap-6"
+            className="relative space-y-4"
           >
-            {/* Album Art Placeholder */}
-            <div className="flex-shrink-0">
-              <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
-                <Music2 className="w-12 h-12 text-primary/60" />
+            {/* Track Info with Album Art */}
+            <div className="flex items-start gap-3">
+              {/* Album Art Placeholder */}
+              <div className="flex-shrink-0">
+                <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/40">
+                  <Music2 className="h-8 w-8 text-primary/60" />
+                </div>
+              </div>
+
+              {/* Track Info */}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-left text-base font-semibold">
+                  {currentTrack.name}
+                </p>
+                <p className="truncate text-left text-sm text-muted-foreground">
+                  {currentTrack.artist}
+                </p>
+                <Badge variant="secondary" className="mt-1 text-xs">
+                  {currentTrack.genre}
+                </Badge>
               </div>
             </div>
 
-            {/* Track Info */}
-            <div className="flex-1 space-y-2">
-              <div>
-                <p className="font-semibold text-lg">{currentTrack.name}</p>
-                <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
-              </div>
-              <Badge variant="secondary" className="text-xs">
-                {currentTrack.genre}
-              </Badge>
-            </div>
-
-            {/* Controls */}
-            <div className="flex flex-col items-center gap-3">
-              {/* Navigation Buttons */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevious}
-                  disabled={isLoading || hasError}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNext}
-                  disabled={isLoading || hasError}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-
-              {/* Volume Control */}
-              <div className="flex items-center gap-2 min-w-[120px]">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleMute}
-                  disabled={isLoading || hasError}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </Button>
+            {/* Volume Control */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleMute}
+                disabled={isLoading || hasError}
+              >
+                {isMuted ? (
+                  <VolumeX className="h-4 w-4" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+              </Button>
+              <div className="flex flex-1 items-center gap-2">
+                <Volume2 className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 <input
                   type="range"
                   min="0"
@@ -208,39 +211,61 @@ export function MusicPlayer({ isPlaying, onPlayPause, onError, audioRef: externa
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
                   disabled={isLoading || hasError}
-                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted"
                 />
+              </div>
+            </div>
+
+            {/* Status and Navigation Controls - One Row */}
+            <div className="flex items-center justify-between gap-2">
+              {/* Status - Left */}
+              {isLoading ? (
+                <div className="flex items-center gap-2 text-left text-sm text-muted-foreground">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                  <span>Loading music...</span>
+                </div>
+              ) : !hasError && currentTrack ? (
+                <div className="flex items-center gap-2 text-left text-xs text-muted-foreground">
+                  <Badge variant={isPlaying ? 'default' : 'outline'}>
+                    {isPlaying ? 'Playing' : 'Ready'}
+                  </Badge>
+                </div>
+              ) : null}
+
+              {/* Navigation Controls - Right */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevious}
+                  disabled={isLoading || hasError}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNext}
+                  disabled={isLoading || hasError}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </motion.div>
         ) : null}
 
-        {/* Status */}
-        {isLoading && (
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-            <span>Loading music...</span>
-          </div>
-        )}
-
-        {!isLoading && !hasError && currentTrack && (
-          <div className="text-xs text-muted-foreground flex items-center gap-2">
-            <Badge variant={isPlaying ? 'default' : 'outline'}>
-              {isPlaying ? 'Playing' : 'Ready'}
-            </Badge>
-            <span>{currentTrack.genre}</span>
-          </div>
-        )}
-        
         {musicFiles.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            <Music2 className="w-16 h-16 mx-auto mb-4 opacity-30" />
+          <div className="py-8 text-center text-muted-foreground">
+            <Music2 className="mx-auto mb-4 h-16 w-16 opacity-30" />
             <p className="mb-2">No music files found</p>
-            <p className="text-sm">Upload music files to <code className="bg-muted px-2 py-1 rounded">public/music/</code></p>
+            <p className="text-sm">
+              Upload music files to{' '}
+              <code className="rounded bg-muted px-2 py-1">public/music/</code>
+            </p>
           </div>
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
-

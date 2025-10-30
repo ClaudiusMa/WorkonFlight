@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Pause, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { ATCAudioPlayer } from './ATCAudioPlayer';
 import { MusicPlayer } from './MusicPlayer';
 import { Airport } from '@/types/airport';
@@ -12,9 +11,20 @@ interface MixedAudioPlayerProps {
   isPlaying: boolean;
   onPlayPause: (playing: boolean) => void;
   onError: (error: string) => void;
+  onPlayPauseHandlerReady?: (handler: () => void) => void;
+  onBothAvailableChange?: (available: boolean) => void;
+  onLoadingChange?: (loading: boolean) => void;
 }
 
-export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: MixedAudioPlayerProps) {
+export function MixedAudioPlayer({ 
+  airport, 
+  isPlaying, 
+  onPlayPause, 
+  onError,
+  onPlayPauseHandlerReady,
+  onBothAvailableChange,
+  onLoadingChange,
+}: MixedAudioPlayerProps) {
   const [atcPlaying, setAtcPlaying] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +33,7 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
   const atcAudioRef = useRef<HTMLAudioElement>(null);
   const musicAudioRef = useRef<HTMLAudioElement>(null);
 
-  const handleMasterPlayPause = () => {
+  const handleMasterPlayPause = useCallback(() => {
     const atcAudio = atcAudioRef.current;
     const musicAudio = musicAudioRef.current;
 
@@ -40,6 +50,7 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
     } else {
       // Play both (only the ones that are available)
       setIsLoading(true);
+      onLoadingChange?.(true);
       const playPromises = [];
       
       if (!atcHasError && airport) {
@@ -58,10 +69,16 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
 
       Promise.allSettled(playPromises).then(() => {
         setIsLoading(false);
+        onLoadingChange?.(false);
         onPlayPause(true); // Update parent state
       });
     }
-  };
+  }, [isPlaying, atcHasError, musicHasError, airport, onPlayPause, onError, onLoadingChange]);
+
+  // Expose handler to parent
+  useEffect(() => {
+    onPlayPauseHandlerReady?.(handleMasterPlayPause);
+  }, [handleMasterPlayPause, onPlayPauseHandlerReady]);
 
   const handleAtcPlayPause = (playing: boolean) => {
     setAtcPlaying(playing);
@@ -83,6 +100,16 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
 
   // Check if both audio sources are available
   const bothAvailable = airport && !atcHasError && !musicHasError;
+
+  // Notify parent of bothAvailable changes
+  useEffect(() => {
+    onBothAvailableChange?.(bothAvailable);
+  }, [bothAvailable, onBothAvailableChange]);
+
+  // Notify parent of loading changes
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   // Reset error states when airport changes
   useEffect(() => {
@@ -111,36 +138,10 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="w-full max-w-4xl mx-auto space-y-6"
+      className="w-full max-w-4xl mx-auto"
     >
-      {/* Master Play/Pause Button */}
-      <div className="flex justify-center">
-        <Button
-          onClick={handleMasterPlayPause}
-          disabled={isLoading || !bothAvailable}
-          size="lg"
-          className="w-32"
-        >
-          {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : isPlaying ? (
-            <Pause className="w-5 h-5" />
-          ) : (
-            <Play className="w-5 h-5" />
-          )}
-          <span className="ml-2">
-            {isLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Play'}
-          </span>
-        </Button>
-        {!bothAvailable && (
-          <p className="ml-4 text-sm text-muted-foreground self-center">
-            {!airport ? 'Select an airport' : 'One audio source unavailable'}
-          </p>
-        )}
-      </div>
-
       {/* Both Players */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ATCAudioPlayer
           airport={airport}
           isPlaying={atcPlaying}
@@ -148,7 +149,6 @@ export function MixedAudioPlayer({ airport, isPlaying, onPlayPause, onError }: M
           onError={handleAtcError}
           audioRef={atcAudioRef}
         />
-        <Separator className="my-4" />
         <MusicPlayer
           isPlaying={musicPlaying}
           onPlayPause={handleMusicPlayPause}
