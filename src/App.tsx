@@ -1,21 +1,83 @@
-import { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Radio, Music } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AirportSelector } from './components/AirportSelector'
 import { MixedAudioPlayer } from './components/MixedAudioPlayer'
-import { AirportInfo } from './components/AirportInfo'
+import { FlightTicket } from './components/FlightTicket'
 import { airports } from './data/airports'
 import { Airport } from './types/airport'
+import { useGeolocation } from './hooks/useGeolocation'
+import { getDistance, calculateFlightDuration } from './lib/flightCalculator'
 
 function App() {
   const [selectedAirport, setSelectedAirport] = useState<Airport | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [flightDurationSeconds, setFlightDurationSeconds] = useState<
+    number | null
+  >(null)
+  const [focusTimeSeconds, setFocusTimeSeconds] = useState(0)
+
+  const geolocation = useGeolocation()
+  const focusTimeIntervalRef = useRef<number | null>(null)
+
+  // Calculate flight duration when airport is selected and location is available
+  useEffect(() => {
+    if (
+      selectedAirport &&
+      geolocation.latitude !== null &&
+      geolocation.longitude !== null
+    ) {
+      const distance = getDistance(
+        geolocation.latitude,
+        geolocation.longitude,
+        selectedAirport.latitude,
+        selectedAirport.longitude
+      )
+      const duration = calculateFlightDuration(distance)
+      setFlightDurationSeconds(duration)
+      // Reset focus time when new airport is selected
+      setFocusTimeSeconds(0)
+    } else {
+      setFlightDurationSeconds(null)
+      setFocusTimeSeconds(0)
+    }
+  }, [selectedAirport, geolocation.latitude, geolocation.longitude])
+
+  // Track focus time when playing
+  useEffect(() => {
+    if (isPlaying) {
+      // Start timer
+      focusTimeIntervalRef.current = setInterval(() => {
+        setFocusTimeSeconds((prev) => {
+          // Stop at flight duration maximum
+          if (flightDurationSeconds !== null && prev >= flightDurationSeconds) {
+            return flightDurationSeconds
+          }
+          return prev + 1
+        })
+      }, 1000) as unknown as number
+    } else {
+      // Pause timer
+      if (focusTimeIntervalRef.current) {
+        clearInterval(focusTimeIntervalRef.current)
+        focusTimeIntervalRef.current = null
+      }
+    }
+
+    return () => {
+      if (focusTimeIntervalRef.current) {
+        clearInterval(focusTimeIntervalRef.current)
+      }
+    }
+  }, [isPlaying, flightDurationSeconds])
 
   const handleAirportSelect = (airport: Airport) => {
     setSelectedAirport(airport)
     setError(null)
+    // Reset focus time when selecting new airport
+    setFocusTimeSeconds(0)
     // Note: Auto-play disabled - user must click play button for both ATC and music
   }
 
@@ -27,6 +89,11 @@ function App() {
     setError(errorMessage)
     setIsPlaying(false)
   }
+
+  const userLocation =
+    geolocation.latitude !== null && geolocation.longitude !== null
+      ? { latitude: geolocation.latitude, longitude: geolocation.longitude }
+      : null
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,16 +107,17 @@ function App() {
         >
           <div className="mb-4 flex items-center justify-center gap-3">
             <Radio className="h-8 w-8 text-primary" />
-            <h1 className="text-5xl font-bold text-foreground">Live ATC Audio</h1>
+            <h1 className="text-5xl font-bold text-foreground">WorkOnFlight</h1>
             <Music className="h-8 w-8 text-primary" />
           </div>
           <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
-            Listen to live air traffic control communications mixed with atmospheric post-rock music
+            Select a destination airport and focus for the flight duration to
+            complete your journey
           </p>
         </motion.div>
 
         {/* Error Display */}
-        {error && (
+        {(error || geolocation.error) && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -57,7 +125,7 @@ function App() {
           >
             <Alert variant="destructive">
               <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{error || geolocation.error}</AlertDescription>
             </Alert>
           </motion.div>
         )}
@@ -71,6 +139,14 @@ function App() {
             onAirportSelect={handleAirportSelect}
           />
 
+          {/* Flight Ticket - Centered on top */}
+          <FlightTicket
+            airport={selectedAirport}
+            userLocation={userLocation}
+            flightDurationSeconds={flightDurationSeconds}
+            focusTimeSeconds={focusTimeSeconds}
+          />
+
           {/* Mixed Audio Player */}
           <MixedAudioPlayer
             airport={selectedAirport}
@@ -78,9 +154,6 @@ function App() {
             onPlayPause={handlePlayPause}
             onError={handleError}
           />
-
-          {/* Airport Information */}
-          <AirportInfo airport={selectedAirport} />
         </div>
 
         {/* Footer */}
@@ -102,7 +175,8 @@ function App() {
             </a>
           </p>
           <p className="mt-2 text-xs">
-            Live ATC audio streams provided via CORS proxy. Some streams may be temporarily unavailable.
+            Live ATC audio streams provided via CORS proxy. Some streams may be
+            temporarily unavailable.
           </p>
         </motion.div>
       </div>
