@@ -10,6 +10,7 @@ import { FocusTimeProgress } from './FocusTimeProgress';
 interface FlightTicketProps {
   airport: Airport | null;
   userLocation: { latitude: number; longitude: number } | null;
+  userCityName: string | null;
   flightDurationSeconds: number | null;
   focusTimeSeconds: number;
 }
@@ -17,6 +18,7 @@ interface FlightTicketProps {
 export function FlightTicket({
   airport,
   userLocation,
+  userCityName,
   flightDurationSeconds,
   focusTimeSeconds,
 }: FlightTicketProps) {
@@ -59,10 +61,14 @@ export function FlightTicket({
                 <span>Origin</span>
               </div>
               <div className="p-3 bg-muted rounded-lg">
-                <p className="font-semibold text-lg">Your Location</p>
-                <p className="text-sm text-muted-foreground">
-                  {userLocation.latitude.toFixed(4)}°N, {Math.abs(userLocation.longitude).toFixed(4)}°W
+                <p className="font-semibold text-lg">
+                  {userCityName || 'Your Location'}
                 </p>
+                {userCityName && (
+                  <p className="text-sm text-muted-foreground">
+                    {userLocation.latitude.toFixed(4)}°N, {Math.abs(userLocation.longitude).toFixed(4)}°W
+                  </p>
+                )}
               </div>
             </div>
 

@@ -9,6 +9,7 @@ import { airports } from './data/airports'
 import { Airport } from './types/airport'
 import { useGeolocation } from './hooks/useGeolocation'
 import { getDistance, calculateFlightDuration } from './lib/flightCalculator'
+import { getCityName } from './lib/geocoding'
 
 function App() {
   const [selectedAirport, setSelectedAirport] = useState<Airport | null>(null)
@@ -18,9 +19,31 @@ function App() {
     number | null
   >(null)
   const [focusTimeSeconds, setFocusTimeSeconds] = useState(0)
+  const [userCityName, setUserCityName] = useState<string | null>(null)
 
   const geolocation = useGeolocation()
   const focusTimeIntervalRef = useRef<number | null>(null)
+
+  // Fetch city name when location is available
+  useEffect(() => {
+    if (
+      geolocation.latitude !== null &&
+      geolocation.longitude !== null &&
+      !geolocation.loading &&
+      !geolocation.error
+    ) {
+      getCityName(geolocation.latitude, geolocation.longitude).then((city) => {
+        setUserCityName(city)
+      })
+    } else {
+      setUserCityName(null)
+    }
+  }, [
+    geolocation.latitude,
+    geolocation.longitude,
+    geolocation.loading,
+    geolocation.error,
+  ])
 
   // Calculate flight duration when airport is selected and location is available
   useEffect(() => {
@@ -143,6 +166,7 @@ function App() {
           <FlightTicket
             airport={selectedAirport}
             userLocation={userLocation}
+            userCityName={userCityName}
             flightDurationSeconds={flightDurationSeconds}
             focusTimeSeconds={focusTimeSeconds}
           />
