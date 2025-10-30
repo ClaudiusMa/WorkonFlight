@@ -37,8 +37,8 @@ export function AirportSelector({
       className="w-full max-w-md mx-auto"
     >
       <div className="flex items-center gap-2 mb-4">
-        <Plane className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-900">Select Airport</h2>
+        <Plane className="w-6 h-6 text-primary" />
+        <h2 className="text-xl font-semibold text-foreground">Select Airport</h2>
       </div>
       
       <Select 
@@ -58,7 +58,7 @@ export function AirportSelector({
                 <div className="font-semibold">
                   {airport.code} - {airport.name}
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   {airport.location}, {airport.country}
                 </div>
               </div>

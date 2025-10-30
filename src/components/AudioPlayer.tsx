@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Play, Pause, Volume2, VolumeX, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Airport } from '@/types/airport';
 
 interface AudioPlayerProps {
@@ -101,9 +103,9 @@ export function AudioPlayer({ airport, isPlaying, onPlayPause, onError }: AudioP
         transition={{ duration: 0.6 }}
         className="w-full max-w-2xl mx-auto"
       >
-        <Card className="bg-white/80 backdrop-blur-sm">
+        <Card>
           <CardContent className="p-8 text-center">
-            <div className="text-gray-500">
+            <div className="text-muted-foreground">
               <Volume2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg">Select an airport to start listening to ATC audio</p>
             </div>
@@ -120,7 +122,7 @@ export function AudioPlayer({ airport, isPlaying, onPlayPause, onError }: AudioP
       transition={{ duration: 0.6 }}
       className="w-full max-w-2xl mx-auto"
     >
-      <Card className="bg-white/80 backdrop-blur-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Volume2 className="w-5 h-5" />
@@ -142,18 +144,19 @@ export function AudioPlayer({ airport, isPlaying, onPlayPause, onError }: AudioP
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"
             >
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Audio Stream Unavailable</p>
-                <p className="text-sm">
-                  The audio stream is temporarily unavailable. This may be due to network issues or the stream being temporarily down.
-                </p>
-                <p className="text-sm mt-2">
-                  Please try again in a moment or select a different airport.
-                </p>
-              </div>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Audio Stream Unavailable</AlertTitle>
+                <AlertDescription>
+                  <p className="mb-2">
+                    The audio stream is temporarily unavailable. This may be due to network issues or the stream being temporarily down.
+                  </p>
+                  <p>
+                    Please try again in a moment or select a different airport.
+                  </p>
+                </AlertDescription>
+              </Alert>
             </motion.div>
           )}
 
@@ -175,7 +178,6 @@ export function AudioPlayer({ airport, isPlaying, onPlayPause, onError }: AudioP
               onClick={handlePlayPause}
               disabled={isLoading || hasError}
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -200,7 +202,7 @@ export function AudioPlayer({ airport, isPlaying, onPlayPause, onError }: AudioP
               </Button>
               
               <div className="flex items-center gap-2 min-w-[120px]">
-                <Volume2 className="w-4 h-4 text-gray-500" />
+                <Volume2 className="w-4 h-4 text-muted-foreground" />
                 <input
                   type="range"
                   min="0"
@@ -209,16 +211,21 @@ export function AudioPlayer({ airport, isPlaying, onPlayPause, onError }: AudioP
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
                   disabled={isLoading || hasError}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                 />
               </div>
             </div>
           </div>
 
           {/* Stream Info */}
-          <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-            <p><strong>Stream:</strong> {airport.audioUrl}</p>
-            <p><strong>Status:</strong> {isLoading ? 'Connecting...' : hasError ? 'Unavailable' : isPlaying ? 'Live' : 'Ready'}</p>
+          <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+            <p><strong className="text-foreground">Stream:</strong> {airport.audioUrl}</p>
+            <p className="flex items-center gap-2 mt-2">
+              <strong className="text-foreground">Status:</strong> 
+              <Badge variant={isLoading ? 'secondary' : hasError ? 'destructive' : isPlaying ? 'default' : 'outline'}>
+                {isLoading ? 'Connecting...' : hasError ? 'Unavailable' : isPlaying ? 'Live' : 'Ready'}
+              </Badge>
+            </p>
           </div>
         </CardContent>
       </Card>

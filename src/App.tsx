@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Radio, Headphones } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AirportSelector } from './components/AirportSelector'
 import { AudioPlayer } from './components/AudioPlayer'
 import { AirportInfo } from './components/AirportInfo'
@@ -37,7 +38,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
@@ -47,11 +48,11 @@ function App() {
           className="mb-12 text-center"
         >
           <div className="mb-4 flex items-center justify-center gap-3">
-            <Radio className="h-8 w-8 text-blue-600" />
-            <h1 className="text-5xl font-bold text-gray-900">Live ATC Audio</h1>
-            <Headphones className="h-8 w-8 text-purple-600" />
+            <Radio className="h-8 w-8 text-primary" />
+            <h1 className="text-5xl font-bold text-foreground">Live ATC Audio</h1>
+            <Headphones className="h-8 w-8 text-primary" />
           </div>
-          <p className="mx-auto max-w-2xl text-xl text-gray-600">
+          <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
             Listen to live air traffic control communications from the world&apos;s busiest
             airports
           </p>
@@ -62,9 +63,12 @@ function App() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mx-auto mb-6 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-4 text-red-700"
+            className="mx-auto mb-6 max-w-2xl"
           >
-            <p className="font-medium">⚠️ {error}</p>
+            <Alert variant="destructive">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           </motion.div>
         )}
 
@@ -94,7 +98,7 @@ function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-16 text-center text-gray-500"
+          className="mt-16 text-center text-muted-foreground"
         >
           <p className="text-sm">
             Audio feeds provided by{' '}
@@ -102,7 +106,7 @@ function App() {
               href="https://liveatc.net"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 underline hover:text-blue-700"
+              className="text-primary underline hover:text-primary/80"
             >
               LiveATC.net
             </a>
