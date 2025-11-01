@@ -8,7 +8,7 @@ export function Ticket() {
       <div className="col-span-12 my-20 grid grid-cols-12">
         {/* Main ticket card - left side with perforated edges on the right */}
         <Card
-          className="col-span-4 col-start-4 h-80 rounded-none border-l-0 border-r-[0px] border-dashed bg-[#F1F0EF]"
+          className="col-span-4 col-start-4 h-80 rounded-none border-r-0 border-dashed bg-[#F1F0EF]"
           style={{
             clipPath: 'inset(0)',
             maskImage:
@@ -40,7 +40,7 @@ export function Ticket() {
                   </div>
                 </div>
                 {/* Departure date and time container */}
-                <div className="text-lg text-[#383838]">
+                <div className="text-lg">
                   {/* Departure date */}
                   <p>Oct 31</p>
                   {/* Departure time */}
@@ -66,7 +66,7 @@ export function Ticket() {
                   </div>
                 </div>
                 {/* Arrival date and time container */}
-                <div className="text-lg text-[#383838]">
+                <div className="text-lg">
                   {/* Arrival date */}
                   <p>Nov 1</p>
                   {/* Arrival time */}
@@ -135,14 +135,14 @@ export function Ticket() {
             {/* Information container */}
             <div className="flex flex-col gap-2">
               {/* Departure Time section */}
-              <div className="flex flex-col items-start text-[#000988]">
-                <p className="text-xs">Departure Time</p>
+              <div className="flex flex-col items-start">
+                <p className="text-xs text-muted-foreground">Departure Time</p>
                 <p className="text-base font-semibold">19:40</p>
               </div>
 
               {/* Destination section */}
-              <div className="flex flex-col items-start text-[#000988]">
-                <p className="text-xs">Destination</p>
+              <div className="flex flex-col items-start">
+                <p className="text-xs text-muted-foreground">Destination</p>
                 <p className="text-base font-semibold">LAX</p>
               </div>
             </div>
