@@ -11,7 +11,7 @@ export async function getCityName(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
       {
         headers: {
-          'User-Agent': 'WorkOnFlight/1.0',
+          'User-Agent': 'Fly/1.0',
         },
       }
     )
