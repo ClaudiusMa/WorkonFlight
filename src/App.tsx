@@ -5,11 +5,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AirportSelector } from './components/AirportSelector'
 import { MixedAudioPlayer } from './components/MixedAudioPlayer'
 import { FlightTicket } from './components/FlightTicket'
+import { Ticket } from './components/Ticket'
 import { airports } from './data/airports'
 import { Airport } from './types/airport'
 import { useGeolocation } from './hooks/useGeolocation'
 import { getDistance, calculateFlightDuration } from './lib/flightCalculator'
 import { getCityName } from './lib/geocoding'
+import Space from './components/Space'
 
 function App() {
   const [selectedAirport, setSelectedAirport] = useState<Airport | null>(null)
@@ -131,32 +133,29 @@ function App() {
       : null
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background py-40">
+      {/* 12 Column Grid Layout */}
+      <div className="grid w-full grid-cols-12">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
+          className="col-span-8 col-start-3"
         >
-          <div className="mb-4 flex items-center justify-center gap-3">
-            <Radio className="h-8 w-8 text-primary" />
-            <h1 className="text-5xl font-bold text-foreground">WorkOnFlight</h1>
-            <Music className="h-8 w-8 text-primary" />
+          <div className="flex items-center justify-center">
+            <h1 className="text-5xl font-bold text-foreground">Flight Focus</h1>
           </div>
-          <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
-            Select a destination airport and focus for the flight duration to
-            complete your journey
-          </p>
         </motion.div>
+
+        <Space />
 
         {/* Error Display */}
         {(error || geolocation.error) && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mx-auto mb-6 max-w-2xl"
+            className="col-span-8 col-start-3"
           >
             <Alert variant="destructive">
               <AlertTitle>Error</AlertTitle>
@@ -165,16 +164,28 @@ function App() {
           </motion.div>
         )}
 
-        {/* Main Content */}
-        <div className="space-y-8">
-          {/* Airport Selection */}
+        {(error || geolocation.error) && <Space />}
+
+        {/* Airport Selection */}
+        <div className="col-span-12">
           <AirportSelector
             airports={airports}
             selectedAirport={selectedAirport}
             onAirportSelect={handleAirportSelect}
           />
+        </div>
 
-          {/* Flight Ticket - Centered on top */}
+        <Space />
+
+        {/* Ticket - Top decoration */}
+        <div className="col-span-12">
+          <Ticket />
+        </div>
+
+        <Space />
+
+        {/* Flight Ticket - Centered on top */}
+        <div className="col-span-12">
           <FlightTicket
             airport={selectedAirport}
             userLocation={userLocation}
@@ -186,8 +197,12 @@ function App() {
             bothAvailable={bothAvailable}
             onPlayPause={handlePlayPauseClick}
           />
+        </div>
 
-          {/* Mixed Audio Player */}
+        <Space />
+
+        {/* Mixed Audio Player */}
+        <div className="col-span-12">
           <MixedAudioPlayer
             airport={selectedAirport}
             isPlaying={isPlaying}
@@ -201,12 +216,14 @@ function App() {
           />
         </div>
 
+        <Space />
+
         {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-16 text-center text-muted-foreground"
+          className="col-span-12 text-center text-muted-foreground"
         >
           <p className="text-sm">
             Audio feeds provided by{' '}
@@ -219,7 +236,7 @@ function App() {
               LiveATC.net
             </a>
           </p>
-          <p className="mt-2 text-xs">
+          <p className="text-xs">
             Live ATC audio streams provided via CORS proxy. Some streams may be
             temporarily unavailable.
           </p>

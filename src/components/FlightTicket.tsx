@@ -1,23 +1,31 @@
-import { motion } from 'framer-motion';
-import { Plane, MapPin, Clock, Ticket, Play, Pause, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Airport } from '@/types/airport';
-import { formatDuration } from '@/lib/flightCalculator';
-import { FocusTimeProgress } from './FocusTimeProgress';
+import { motion } from 'framer-motion'
+import {
+  Plane,
+  MapPin,
+  Clock,
+  Ticket,
+  Play,
+  Pause,
+  Loader2,
+} from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import { Airport } from '@/types/airport'
+import { formatDuration } from '@/lib/flightCalculator'
+import { FocusTimeProgress } from './FocusTimeProgress'
 
 interface FlightTicketProps {
-  airport: Airport | null;
-  userLocation: { latitude: number; longitude: number } | null;
-  userCityName: string | null;
-  flightDurationSeconds: number | null;
-  focusTimeSeconds: number;
-  isPlaying: boolean;
-  isLoading: boolean;
-  bothAvailable: boolean;
-  onPlayPause: () => void;
+  airport: Airport | null
+  userLocation: { latitude: number; longitude: number } | null
+  userCityName: string | null
+  flightDurationSeconds: number | null
+  focusTimeSeconds: number
+  isPlaying: boolean
+  isLoading: boolean
+  bothAvailable: boolean
+  onPlayPause: () => void
 }
 
 export function FlightTicket({
@@ -33,53 +41,62 @@ export function FlightTicket({
 }: FlightTicketProps) {
   // Don't render if no airport selected or no location
   if (!airport || !userLocation || !flightDurationSeconds) {
-    return null;
+    return null
   }
 
-  const isExpired = flightDurationSeconds > 0 && focusTimeSeconds >= flightDurationSeconds;
-  const ticketStatus = isExpired ? 'Expired' : 'Active';
-  const formatCoordinate = (value: number, positiveSuffix: string, negativeSuffix: string) => {
-    const suffix = value >= 0 ? positiveSuffix : negativeSuffix;
-    return `${Math.abs(value).toFixed(4)}°${suffix}`;
-  };
+  const isExpired =
+    flightDurationSeconds > 0 && focusTimeSeconds >= flightDurationSeconds
+  const ticketStatus = isExpired ? 'Expired' : 'Active'
+  const formatCoordinate = (
+    value: number,
+    positiveSuffix: string,
+    negativeSuffix: string
+  ) => {
+    const suffix = value >= 0 ? positiveSuffix : negativeSuffix
+    return `${Math.abs(value).toFixed(4)}°${suffix}`
+  }
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="w-full max-w-4xl mx-auto"
+      className="mx-auto w-full max-w-4xl"
     >
       <Card className="border-2">
         <CardHeader>
           <CardTitle className="flex items-center justify-center gap-2">
-            <Ticket className="w-5 h-5 text-primary" />
+            <Ticket className="h-5 w-5 text-primary" />
             Flight Ticket
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Ticket Status Badge */}
           <div className="flex justify-center">
-            <Badge variant={isExpired ? 'destructive' : 'default'} className="text-sm px-4 py-1">
+            <Badge
+              variant={isExpired ? 'destructive' : 'default'}
+              className="px-4 py-1 text-sm"
+            >
               {ticketStatus}
             </Badge>
           </div>
 
           {/* Origin and Destination */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Origin */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4" />
+                <MapPin className="h-4 w-4" />
                 <span>Origin</span>
               </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="font-semibold text-lg">
+              <div className="rounded-lg bg-muted p-3">
+                <p className="text-lg font-semibold">
                   {userCityName || 'Your Location'}
                 </p>
                 {userCityName && (
                   <p className="text-sm text-muted-foreground">
-                    {formatCoordinate(userLocation.latitude, 'N', 'S')}, {formatCoordinate(userLocation.longitude, 'E', 'W')}
+                    {formatCoordinate(userLocation.latitude, 'N', 'S')},{' '}
+                    {formatCoordinate(userLocation.longitude, 'E', 'W')}
                   </p>
                 )}
               </div>
@@ -88,11 +105,11 @@ export function FlightTicket({
             {/* Destination */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Plane className="w-4 h-4" />
+                <Plane className="h-4 w-4" />
                 <span>Destination</span>
               </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="font-semibold text-lg">{airport.name}</p>
+              <div className="rounded-lg bg-muted p-3">
+                <p className="text-lg font-semibold">{airport.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {airport.code} - {airport.location}, {airport.country}
                 </p>
@@ -104,10 +121,14 @@ export function FlightTicket({
 
           {/* Flight Duration */}
           <div className="flex items-center justify-center gap-3">
-            <Clock className="w-5 h-5 text-primary" />
+            <Clock className="h-5 w-5 text-primary" />
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Estimated Flight Duration</p>
-              <p className="text-2xl font-bold">{formatDuration(flightDurationSeconds)}</p>
+              <p className="text-sm text-muted-foreground">
+                Estimated Flight Duration
+              </p>
+              <p className="text-2xl font-bold">
+                {formatDuration(flightDurationSeconds)}
+              </p>
             </div>
           </div>
 
@@ -132,11 +153,11 @@ export function FlightTicket({
               className="w-32"
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : isPlaying ? (
-                <Pause className="w-5 h-5" />
+                <Pause className="h-5 w-5" />
               ) : (
-                <Play className="w-5 h-5" />
+                <Play className="h-5 w-5" />
               )}
               <span className="ml-2">
                 {isLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Start'}
@@ -144,12 +165,12 @@ export function FlightTicket({
             </Button>
           </div>
           {!bothAvailable && (
-            <p className="text-center text-sm text-muted-foreground pt-2">
+            <p className="pt-2 text-center text-sm text-muted-foreground">
               {!airport ? 'Select an airport' : 'One audio source unavailable'}
             </p>
           )}
         </CardContent>
       </Card>
     </motion.div>
-  );
+  )
 }

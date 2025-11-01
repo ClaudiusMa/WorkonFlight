@@ -5,7 +5,7 @@ export function Ticket() {
   return (
     <>
       {/* Main grid container for ticket layout */}
-      <div className="col-span-12 my-20 grid grid-cols-12">
+      <div className="col-span-12 grid grid-cols-12">
         {/* Main ticket card - left side with perforated edges on the right */}
         <Card
           className="col-span-4 col-start-4 h-80 rounded-none border-r-0 border-dashed bg-[#F1F0EF]"
@@ -49,7 +49,7 @@ export function Ticket() {
               </div>
 
               {/* Airplane icon - visual separator between From and To */}
-              <Plane className="h-9 w-9 rotate-90 text-[#000988]" />
+              <Plane className="h-8 w-8 rotate-45 text-[#000988]" />
 
               {/* To section - arrival airport info */}
               <div className="flex flex-col items-start gap-4">
