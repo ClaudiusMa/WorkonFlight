@@ -102,6 +102,11 @@ function App() {
   const handleAirportSelect = (airport: Airport) => {
     setSelectedAirport(airport)
     setError(null)
+    if (isPlaying) {
+      // Pause active playback so timers and audio stay in sync with the new airport
+      playPauseHandlerRef.current?.()
+      setIsPlaying(false)
+    }
     // Reset focus time when selecting new airport
     setFocusTimeSeconds(0)
     // Note: Auto-play disabled - user must click play button for both ATC and music

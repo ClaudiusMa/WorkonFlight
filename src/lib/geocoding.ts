@@ -6,6 +6,14 @@ export async function getCityName(
   latitude: number,
   longitude: number
 ): Promise<string | null> {
+  const formatCoordinate = (value: number, positiveSuffix: string, negativeSuffix: string) => {
+    const suffix = value >= 0 ? positiveSuffix : negativeSuffix;
+    return `${Math.abs(value).toFixed(4)}°${suffix}`;
+  };
+
+  const formatFallback = () =>
+    `${formatCoordinate(latitude, 'N', 'S')}, ${formatCoordinate(longitude, 'E', 'W')}`;
+
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
@@ -48,11 +56,10 @@ export async function getCityName(
     }
 
     // Fallback: return coordinates if city not found
-    return `${latitude.toFixed(4)}°N, ${Math.abs(longitude).toFixed(4)}°W`
+    return formatFallback()
   } catch (error) {
     console.error('Error reverse geocoding:', error)
     // Fallback to coordinates on error
-    return `${latitude.toFixed(4)}°N, ${Math.abs(longitude).toFixed(4)}°W`
+    return formatFallback()
   }
 }
-

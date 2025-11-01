@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Pause, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { ATCAudioPlayer } from './ATCAudioPlayer';
 import { MusicPlayer } from './MusicPlayer';
 import { Airport } from '@/types/airport';
@@ -48,32 +46,84 @@ export function MixedAudioPlayer({
       if (!musicHasError) musicAudio.pause();
       onPlayPause(false); // Update parent state
     } else {
-      // Play both (only the ones that are available)
       setIsLoading(true);
       onLoadingChange?.(true);
-      const playPromises = [];
-      
-      if (!atcHasError && airport) {
-        playPromises.push(atcAudio.play().catch((err) => {
-          console.error('Error playing ATC:', err);
-          setAtcHasError(true);
-        }));
-      }
-      
-      if (!musicHasError) {
-        playPromises.push(musicAudio.play().catch((err) => {
-          console.error('Error playing music:', err);
-          setMusicHasError(true);
-        }));
+
+      const playAttempts: Promise<{ source: 'atc' | 'music' }>[] = [];
+
+      if (airport) {
+        if (atcHasError) {
+          setAtcHasError(false);
+        }
+
+        playAttempts.push(
+          atcAudio
+            .play()
+            .then(() => ({ source: 'atc' }))
+            .catch((error) => {
+              console.error('Error playing ATC:', error);
+              throw { source: 'atc' as const, error };
+            })
+        );
       }
 
-      Promise.allSettled(playPromises).then(() => {
+      if (musicHasError) {
+        setMusicHasError(false);
+      }
+
+      playAttempts.push(
+        musicAudio
+          .play()
+          .then(() => ({ source: 'music' }))
+          .catch((error) => {
+            console.error('Error playing music:', error);
+            throw { source: 'music' as const, error };
+          })
+      );
+
+      if (playAttempts.length === 0) {
         setIsLoading(false);
         onLoadingChange?.(false);
-        onPlayPause(true); // Update parent state
+        onError('Audio elements not ready. Please select an airport first.');
+        onPlayPause(false);
+        return;
+      }
+
+      Promise.allSettled(playAttempts).then((results) => {
+        const anySuccess = results.some((result) => result.status === 'fulfilled');
+
+        results.forEach((result) => {
+          if (result.status === 'rejected' && result.reason) {
+            const { source } = result.reason as { source: 'atc' | 'music' };
+            if (source === 'atc') {
+              setAtcHasError(true);
+            }
+            if (source === 'music') {
+              setMusicHasError(true);
+            }
+          }
+        });
+
+        if (anySuccess) {
+          onPlayPause(true);
+        } else {
+          onPlayPause(false);
+          onError('Unable to start audio playback. Please try again or pick another airport.');
+        }
+      }).finally(() => {
+        setIsLoading(false);
+        onLoadingChange?.(false);
       });
     }
-  }, [isPlaying, atcHasError, musicHasError, airport, onPlayPause, onError, onLoadingChange]);
+  }, [
+    isPlaying,
+    atcHasError,
+    musicHasError,
+    airport,
+    onPlayPause,
+    onError,
+    onLoadingChange,
+  ]);
 
   // Expose handler to parent
   useEffect(() => {
@@ -159,4 +209,3 @@ export function MixedAudioPlayer({
     </motion.div>
   );
 }
-

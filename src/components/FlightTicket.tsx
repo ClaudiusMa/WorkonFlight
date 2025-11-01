@@ -38,6 +38,10 @@ export function FlightTicket({
 
   const isExpired = flightDurationSeconds > 0 && focusTimeSeconds >= flightDurationSeconds;
   const ticketStatus = isExpired ? 'Expired' : 'Active';
+  const formatCoordinate = (value: number, positiveSuffix: string, negativeSuffix: string) => {
+    const suffix = value >= 0 ? positiveSuffix : negativeSuffix;
+    return `${Math.abs(value).toFixed(4)}°${suffix}`;
+  };
 
   return (
     <motion.div
@@ -75,7 +79,7 @@ export function FlightTicket({
                 </p>
                 {userCityName && (
                   <p className="text-sm text-muted-foreground">
-                    {userLocation.latitude.toFixed(4)}°N, {Math.abs(userLocation.longitude).toFixed(4)}°W
+                    {formatCoordinate(userLocation.latitude, 'N', 'S')}, {formatCoordinate(userLocation.longitude, 'E', 'W')}
                   </p>
                 )}
               </div>
@@ -149,4 +153,3 @@ export function FlightTicket({
     </motion.div>
   );
 }
-
