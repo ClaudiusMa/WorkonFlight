@@ -202,7 +202,7 @@ function App() {
         <Space />
 
         {/* Mixed Audio Player */}
-        <div className="col-span-12">
+        <div className="col-span-12"> 
           <MixedAudioPlayer
             airport={selectedAirport}
             isPlaying={isPlaying}
