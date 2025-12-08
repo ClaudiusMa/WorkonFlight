@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { useThreeScene } from './useThreeScene'
+import { uiTimings, flightInfoDelayMs } from './config'
 
 // ============================================
 // COLORS - Edit these to change color palette
@@ -82,22 +83,61 @@ export function WaterShaderDemo({
   },
 }: WaterShaderDemoProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { flyIn, flyOut } = useThreeScene(containerRef)
+  const { showShadow, hideShadow } = useThreeScene(containerRef)
   
   // Track button states for opacity
   const [isPlaying, setIsPlaying] = useState(false)
   const [isStopped, setIsStopped] = useState(true)
   
-  // Timer state
-  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  // Ticket state - will be controlled by Arduino signal in the future
+  // For now, can be toggled for testing
+  const [hasTicket, setHasTicket] = useState(false)
+  const [showFlightInfo, setShowFlightInfo] = useState(false)
+  
+  // Title fade animation state
+  const [titleOpacity, setTitleOpacity] = useState(1)
+  const [displayedText, setDisplayedText] = useState('FLY')
+  const isFirstRender = useRef(true)
+  
+  // Timer state - load from localStorage on init
+  const [elapsedSeconds, setElapsedSeconds] = useState(() => {
+    const saved = localStorage.getItem('workonflight-timer')
+    return saved ? parseInt(saved, 10) : 0
+  })
 
-  // Timer effect
+  // Handle ticket insertion/removal - controls shadow and flight info visibility
+  useEffect(() => {
+    let timeoutId: number | undefined
+
+    if (hasTicket) {
+      showShadow()
+      // Show flight info after fly-in animation + configured delay
+      timeoutId = window.setTimeout(() => {
+        setShowFlightInfo(true)
+      }, flightInfoDelayMs)
+    } else {
+      hideShadow()
+      setShowFlightInfo(false) // Hide immediately
+    }
+
+    return () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId)
+      }
+    }
+  }, [hasTicket, showShadow, hideShadow])
+
+  // Timer effect - saves to localStorage every second
   useEffect(() => {
     let intervalId: number | undefined
 
     if (isPlaying) {
       intervalId = window.setInterval(() => {
-        setElapsedSeconds(prev => prev + 1)
+        setElapsedSeconds(prev => {
+          const newValue = prev + 1
+          localStorage.setItem('workonflight-timer', String(newValue))
+          return newValue
+        })
       }, 1000)
     }
 
@@ -109,20 +149,50 @@ export function WaterShaderDemo({
   }, [isPlaying])
 
   const handlePlay = () => {
-    flyIn()
     setIsPlaying(true)
     setIsStopped(false)
   }
 
   const handleStop = () => {
-    flyOut()
     setIsStopped(true)
     setIsPlaying(false)
-    setElapsedSeconds(0) // Reset timer
+    // Timer persists - no reset
   }
 
+  // Temp: Toggle ticket for testing (remove when Arduino is connected)
+  const toggleTicket = () => setHasTicket(prev => !prev)
+
   // Display "FLY" or timer based on playing state
-  const displayTime = isPlaying ? formatTime(elapsedSeconds) : 'FLY'
+  const targetText = isPlaying ? formatTime(elapsedSeconds) : 'FLY'
+  
+  // Title fade animation effect - fade out, change text, fade in
+  useEffect(() => {
+    // Skip animation on first render
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      setDisplayedText(targetText)
+      return
+    }
+    
+    // Only animate when switching between FLY and timer (not every second)
+    const isTextTypeChange = (displayedText === 'FLY') !== (targetText === 'FLY')
+    
+    if (isTextTypeChange) {
+      // Fade out
+      setTitleOpacity(0)
+      
+      // After fade out, change text and fade in
+      const timeout = setTimeout(() => {
+        setDisplayedText(targetText)
+        setTitleOpacity(1)
+      }, uiTimings.fadeOut * 1000)
+      
+      return () => clearTimeout(timeout)
+    } else {
+      // Just update the text (timer counting)
+      setDisplayedText(targetText)
+    }
+  }, [targetText, displayedText])
 
   const infoItems = [
     { label: 'LOCATION:', value: flightInfo.location },
@@ -142,19 +212,32 @@ export function WaterShaderDemo({
         style={{ 
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           opacity: isPlaying ? 1 : 0,
-          transition: 'opacity 0.3s ease'
+          transition: `opacity ${uiTimings.fadeIn}s ease`
         }}
       />
 
       <div className={styles.grid}>
-        <h1 className={styles.time} style={{ color: colors.secondary, fontFamily: fonts.heavy }}>{displayTime}</h1>
+        <h1 
+          className={styles.time} 
+          style={{ 
+            color: colors.secondary, 
+            fontFamily: fonts.heavy, 
+            cursor: 'pointer', 
+            pointerEvents: 'auto',
+            opacity: titleOpacity,
+            transition: `opacity ${uiTimings.fadeIn}s ease-in, opacity ${uiTimings.fadeOut}s ease-out`
+          }}
+          onClick={toggleTicket}
+        >
+          {displayedText}
+        </h1>
         <p 
           className={styles.description} 
           style={{ 
             color: colors.primary, 
             fontFamily: fonts.light,
-            opacity: isPlaying ? 0.2 : 1,
-            transition: 'opacity 0.3s ease'
+            opacity: isPlaying ? uiTimings.dimmedOpacity : 1,
+            transition: `opacity ${uiTimings.fadeOut}s ease`
           }}
         >
           {description}
@@ -162,7 +245,11 @@ export function WaterShaderDemo({
 
         <div 
           className={styles.flightInfoContainer}
-          style={{ opacity: isPlaying ? 0.2 : 1, transition: 'opacity 0.3s ease' }}
+          style={{ 
+            opacity: showFlightInfo ? (isPlaying ? uiTimings.dimmedOpacity : 1) : 0, 
+            transition: `opacity ${uiTimings.fadeOut}s ease`,
+            pointerEvents: showFlightInfo ? 'auto' : 'none'
+          }}
         >
           {infoItems.map((item) => (
             <div key={item.label} className={styles.infoItem}>

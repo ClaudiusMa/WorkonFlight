@@ -11,6 +11,8 @@ import { airplaneConfig, texturePaths } from './config'
 interface UseThreeSceneReturn {
   flyIn: () => void
   flyOut: () => void
+  showShadow: () => void
+  hideShadow: () => void
 }
 
 // ============================================
@@ -25,6 +27,7 @@ export function useThreeScene(
   const clockRef = useRef<THREE.Clock | null>(null)
   const animationIdRef = useRef<number | null>(null)
   const isFlownInRef = useRef<boolean>(false)
+  const isShadowVisibleRef = useRef<boolean>(false)
 
   useEffect(() => {
     const container = containerRef.current
@@ -80,14 +83,14 @@ export function useThreeScene(
     shadowRenderer.domElement.style.filter = `blur(${airplaneConfig.blur}px)`
     container.appendChild(shadowRenderer.domElement)
 
-    // Create airplane shadow
+    // Create airplane shadow - starts invisible (opacity 0)
     const shadowTexture = loader.load(texturePaths.shadow)
-    const { size, aspect, opacity, startPosition } = airplaneConfig
+    const { size, aspect, startPosition } = airplaneConfig
     const shadowGeometry = new THREE.PlaneGeometry(size, size * aspect)
     const shadowMaterial = new THREE.MeshBasicMaterial({
       map: shadowTexture,
       transparent: true,
-      opacity,
+      opacity: 0, // Start invisible - ticket not inserted
       side: THREE.DoubleSide,
     })
 
@@ -134,18 +137,36 @@ export function useThreeScene(
   }, [containerRef])
 
   const flyIn = useCallback(() => {
-    if (shadowPlaneRef.current) {
+    if (shadowPlaneRef.current && isShadowVisibleRef.current) {
       triggerAirplaneAnimation({ shadowPlane: shadowPlaneRef.current })
       isFlownInRef.current = true
     }
   }, [])
 
   const flyOut = useCallback(() => {
-    if (shadowPlaneRef.current) {
+    if (shadowPlaneRef.current && isShadowVisibleRef.current) {
       flyOutAirplane({ shadowPlane: shadowPlaneRef.current })
       isFlownInRef.current = false
     }
   }, [])
 
-  return { flyIn, flyOut }
+  // Show shadow when ticket is inserted (dissolve in)
+  const showShadow = useCallback(() => {
+    if (shadowPlaneRef.current) {
+      triggerAirplaneAnimation({ shadowPlane: shadowPlaneRef.current })
+      isShadowVisibleRef.current = true
+      isFlownInRef.current = true
+    }
+  }, [])
+
+  // Hide shadow when ticket is removed (dissolve out)
+  const hideShadow = useCallback(() => {
+    if (shadowPlaneRef.current) {
+      flyOutAirplane({ shadowPlane: shadowPlaneRef.current })
+      isShadowVisibleRef.current = false
+      isFlownInRef.current = false
+    }
+  }, [])
+
+  return { flyIn, flyOut, showShadow, hideShadow }
 }
