@@ -100,6 +100,41 @@ export function WaterShaderDemo({
             </div>
           ))}
         </div>
+
+        {/* Thought Bubble Group - Fixed position, col-7 span-5 */}
+        <div className="absolute top-[15%] left-0 right-0 grid grid-cols-12 pointer-events-none z-50">
+          <div className="col-start-7 col-span-5 pointer-events-auto">
+            {/* All bubbles group */}
+            <div className="relative">
+              {/* Main thought bubble */}
+              <img src="/water-demo/mainBubble.svg" alt="" className="w-[35vw]" />
+              
+              {/* Play and Stop buttons group - centered on main bubble */}
+              <div className="absolute inset-0 flex items-center justify-center gap-10 -translate-x-6">
+                <div className="w-12 h-12 flex items-center justify-center cursor-pointer">
+                  <img src="/water-demo/playButton.svg" alt="Play" className="w-[3vw]" />
+                </div>
+                <div className="w-12 h-12 flex items-center justify-center cursor-pointer">
+                  <img src="/water-demo/stopButton.svg" alt="Stop" className="w-[2.5vw]" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Medium bubble */}
+            <img 
+              src="/water-demo/midBubble.svg" 
+              alt="" 
+              className="pl-3 w-[3vw]" 
+            />
+            
+            {/* Small bubble */}
+            <img 
+              src="/water-demo/smallBubble.svg" 
+              alt="" 
+              className="pl-2 pt-3 w-[1.5vw]" 
+            />
+          </div>
+        </div>
       </div>
     </div>
   )
