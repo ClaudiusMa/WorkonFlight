@@ -46,7 +46,7 @@ export const fragmentShader = `
     vec2 uv = vUv;
 
     // WAVE CONFIGURATION
-    float speed = 0.4;
+    float speed = 0.07;
     float scale = 3.0; // How "big" the ripples are
     float strength = 0.02; // How much they distort the image
 
