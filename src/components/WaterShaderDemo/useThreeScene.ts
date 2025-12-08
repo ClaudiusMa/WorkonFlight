@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
 import { vertexShader, fragmentShader } from './shaders'
-import { triggerAirplaneAnimation, flyOutAirplane, resetAirplanePosition } from './airplaneAnimation'
+import { triggerAirplaneAnimation, flyOutAirplane } from './airplaneAnimation'
 import { airplaneConfig, texturePaths } from './config'
 
 // ============================================
@@ -9,9 +9,8 @@ import { airplaneConfig, texturePaths } from './config'
 // ============================================
 
 interface UseThreeSceneReturn {
-  triggerLanding: () => void
-  resetScene: () => void
-  toggleAirplane: () => void
+  flyIn: () => void
+  flyOut: () => void
 }
 
 // ============================================
@@ -134,31 +133,19 @@ export function useThreeScene(
     }
   }, [containerRef])
 
-  const triggerLanding = useCallback(() => {
+  const flyIn = useCallback(() => {
     if (shadowPlaneRef.current) {
       triggerAirplaneAnimation({ shadowPlane: shadowPlaneRef.current })
       isFlownInRef.current = true
     }
   }, [])
 
-  const resetScene = useCallback(() => {
+  const flyOut = useCallback(() => {
     if (shadowPlaneRef.current) {
-      resetAirplanePosition(shadowPlaneRef.current)
-      isFlownInRef.current = false
-    }
-  }, [])
-
-  const toggleAirplane = useCallback(() => {
-    if (!shadowPlaneRef.current) return
-
-    if (isFlownInRef.current) {
       flyOutAirplane({ shadowPlane: shadowPlaneRef.current })
       isFlownInRef.current = false
-    } else {
-      triggerAirplaneAnimation({ shadowPlane: shadowPlaneRef.current })
-      isFlownInRef.current = true
     }
   }, [])
 
-  return { triggerLanding, resetScene, toggleAirplane }
+  return { flyIn, flyOut }
 }

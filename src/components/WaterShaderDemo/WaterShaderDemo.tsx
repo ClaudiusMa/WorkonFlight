@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useThreeScene } from './useThreeScene'
 
 // ============================================
@@ -53,9 +53,18 @@ interface FlightInfo {
 }
 
 interface WaterShaderDemoProps {
-  time?: string
   description?: string
   flightInfo?: FlightInfo
+}
+
+// ============================================
+// HELPER
+// ============================================
+
+function formatTime(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 }
 
 // ============================================
@@ -63,8 +72,7 @@ interface WaterShaderDemoProps {
 // ============================================
 
 export function WaterShaderDemo({
-  time = '05:30',
-  description = 'AT ITS CORE, JAZZ GUITAR IS A STYLE OF PLAYING THAT PRIORITIZES IMPROVISATION, RHYTHMIC SWING, AND COMPLEX HARMONY. UNLIKE ROCK OR POP, WHERE YOU OFTEN PLAY',
+  description = "Work shouldn't feel like a chore. It can be a flying experience. We makes it easier to stay in flow with ambient radio and lofi. Insert your ticket, start the mix, and let your focus take off.",
   flightInfo = {
     location: 'BERKELEY',
     destination: 'LOS ANGELES',
@@ -74,7 +82,47 @@ export function WaterShaderDemo({
   },
 }: WaterShaderDemoProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { toggleAirplane } = useThreeScene(containerRef)
+  const { flyIn, flyOut } = useThreeScene(containerRef)
+  
+  // Track button states for opacity
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isStopped, setIsStopped] = useState(true)
+  
+  // Timer state
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+
+  // Timer effect
+  useEffect(() => {
+    let intervalId: number | undefined
+
+    if (isPlaying) {
+      intervalId = window.setInterval(() => {
+        setElapsedSeconds(prev => prev + 1)
+      }, 1000)
+    }
+
+    return () => {
+      if (intervalId) {
+        window.clearInterval(intervalId)
+      }
+    }
+  }, [isPlaying])
+
+  const handlePlay = () => {
+    flyIn()
+    setIsPlaying(true)
+    setIsStopped(false)
+  }
+
+  const handleStop = () => {
+    flyOut()
+    setIsStopped(true)
+    setIsPlaying(false)
+    setElapsedSeconds(0) // Reset timer
+  }
+
+  // Display "FLY" or timer based on playing state
+  const displayTime = isPlaying ? formatTime(elapsedSeconds) : 'FLY'
 
   const infoItems = [
     { label: 'LOCATION:', value: flightInfo.location },
@@ -85,14 +133,37 @@ export function WaterShaderDemo({
   ]
 
   return (
-    <div className={styles.container} onClick={toggleAirplane} style={{ cursor: 'pointer' }}>
+    <div className={styles.container}>
       <div ref={containerRef} className={styles.canvas} />
+      
+      {/* Dark overlay for background dimming */}
+      <div 
+        className="absolute inset-0 z-[2] pointer-events-none"
+        style={{ 
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          opacity: isPlaying ? 1 : 0,
+          transition: 'opacity 0.3s ease'
+        }}
+      />
 
       <div className={styles.grid}>
-        <h1 className={styles.time} style={{ color: colors.secondary, fontFamily: fonts.heavy }}>{time}</h1>
-        <p className={styles.description} style={{ color: colors.primary, fontFamily: fonts.light }}>{description}</p>
+        <h1 className={styles.time} style={{ color: colors.secondary, fontFamily: fonts.heavy }}>{displayTime}</h1>
+        <p 
+          className={styles.description} 
+          style={{ 
+            color: colors.primary, 
+            fontFamily: fonts.light,
+            opacity: isPlaying ? 0.2 : 1,
+            transition: 'opacity 0.3s ease'
+          }}
+        >
+          {description}
+        </p>
 
-        <div className={styles.flightInfoContainer}>
+        <div 
+          className={styles.flightInfoContainer}
+          style={{ opacity: isPlaying ? 0.2 : 1, transition: 'opacity 0.3s ease' }}
+        >
           {infoItems.map((item) => (
             <div key={item.label} className={styles.infoItem}>
               <span className={styles.label} style={{ color: colors.primary, fontFamily: fonts.bold }}>{item.label}</span>
@@ -107,14 +178,27 @@ export function WaterShaderDemo({
             {/* All bubbles group */}
             <div className="relative">
               {/* Main thought bubble */}
-              <img src="/water-demo/mainBubble.svg" alt="" className="w-[35vw]" />
+              <img 
+                src="/water-demo/mainBubble.svg" 
+                alt="" 
+                className="w-[35vw]" 
+                style={{ opacity: isPlaying ? 0.2 : 1, transition: 'opacity 0.3s ease' }}
+              />
               
-              {/* Play and Stop buttons group - centered on main bubble */}
+              {/* Play and Stop buttons group - centered on main bubble (stays visible) */}
               <div className="absolute inset-0 flex items-center justify-center gap-10 -translate-x-6">
-                <div className="w-12 h-12 flex items-center justify-center cursor-pointer">
+                <div 
+                  className="w-12 h-12 flex items-center justify-center cursor-pointer transition-opacity duration-200"
+                  onClick={handlePlay}
+                  style={{ opacity: isPlaying ? 0.2 : 1 }}
+                >
                   <img src="/water-demo/playButton.svg" alt="Play" className="w-[3vw]" />
                 </div>
-                <div className="w-12 h-12 flex items-center justify-center cursor-pointer">
+                <div 
+                  className="w-12 h-12 flex items-center justify-center cursor-pointer transition-opacity duration-200"
+                  onClick={handleStop}
+                  style={{ opacity: isStopped ? 0.2 : 1 }}
+                >
                   <img src="/water-demo/stopButton.svg" alt="Stop" className="w-[2.5vw]" />
                 </div>
               </div>
@@ -125,6 +209,7 @@ export function WaterShaderDemo({
               src="/water-demo/midBubble.svg" 
               alt="" 
               className="pl-3 w-[3vw]" 
+              style={{ opacity: isPlaying ? 0.2 : 1, transition: 'opacity 0.3s ease' }}
             />
             
             {/* Small bubble */}
@@ -132,6 +217,7 @@ export function WaterShaderDemo({
               src="/water-demo/smallBubble.svg" 
               alt="" 
               className="pl-2 pt-3 w-[1.5vw]" 
+              style={{ opacity: isPlaying ? 0.2 : 1, transition: 'opacity 0.3s ease' }}
             />
           </div>
         </div>
